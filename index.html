@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini API App Inspirator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b0764 100%); /* Deep blue to deep purple gradient */
+            color: #e0e0e0; /* Light gray text for better contrast on dark background */
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #8b5cf6; /* Violet */
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a78bfa; /* Lighter violet */
+        }
+
+        .title-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px); /* Safari */
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(18, 18, 29, 0.37);
+        }
+
+        .idea-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05); /* Slightly transparent white */
+            backdrop-filter: blur(5px); /* Subtle blur for cards */
+            position: relative; /* Added for absolute positioning of copy button */
+        }
+        .idea-card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+            border-color: rgba(167, 139, 250, 0.5); /* Highlight with accent color */
+        }
+
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            z-index: 1;
+        }
+        .btn-shine::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -150%; /* Start further left */
+            width: 50%; /* Narrower shine */
+            height: 100%;
+            background: linear-gradient(
+                120deg,
+                transparent,
+                rgba(255, 255, 255, 0.5), /* Brighter shine */
+                transparent
+            );
+            transform: skewX(-25deg); /* Angled shine */
+            transition: left 0.7s ease-in-out;
+        }
+        .btn-shine:hover::before {
+            left: 150%; /* Move further right */
+        }
+        .btn-shine:hover {
+            transform: scale(1.05); /* Add scale on hover */
+        }
+
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(167, 139, 250, 0.5), 0 0 25px rgba(167, 139, 250, 0.3);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(167, 139, 250, 0.7), 0 0 40px rgba(167, 139, 250, 0.5);
+                transform: scale(1.02);
+            }
+        }
+        .pulse-animation {
+            animation: pulse-glow 2.5s infinite ease-in-out;
+        }
+
+        /* Loading Spinner Style */
+        .custom-spinner {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+            border: 5px solid;
+            border-color: #c4b5fd transparent #c4b5fd transparent; /* Light purple */
+            animation: rotation 1.2s linear infinite;
+        }
+        .custom-spinner::after, .custom-spinner::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            margin: auto;
+            border: 5px solid;
+            border-color: transparent #a78bfa transparent #a78bfa; /* Mid purple */
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            animation: rotationBack 0.7s linear infinite;
+            transform-origin: center center;
+        }
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes rotationBack {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(-360deg); }
+        }
+
+        /* Copy button style */
+        .copy-button i {
+            transition: color 0.2s ease-in-out;
+        }
+
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 overflow-x-hidden">
+
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-80 flex flex-col items-center justify-center z-50 hidden transition-opacity duration-300">
+        <div class="custom-spinner"></div>
+        <p class="mt-6 text-2xl text-gray-200 title-font tracking-wider">Summoning Creative Sparks...</p>
+        <p class="text-sm text-gray-400 mt-1">Please wait a moment.</p>
+    </div>
+
+    <div id="error-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 hidden p-4 transition-opacity duration-300">
+        <div class="glassmorphism p-8 rounded-xl shadow-2xl max-w-lg w-full text-center border-red-500/50 border-2">
+            <div class="text-6xl mb-5"><i class="fas fa-exclamation-circle text-red-400"></i></div>
+            <h2 class="text-3xl font-bold mb-3 text-red-300 title-font">Oops! An Error Occurred</h2>
+            <p id="error-message" class="text-gray-300 mb-8 text-base">Could not fetch ideas. Please check your API key or network connection.</p>
+            <button onclick="document.getElementById('error-modal').classList.add('hidden')" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-8 rounded-lg transition duration-300 transform hover:scale-105">
+                Dismiss
+            </button>
+        </div>
+    </div>
+
+    <header class="text-center mb-8 md:mb-10 relative z-10">
+        <div class="inline-block p-2 rounded-full bg-white/10 mb-4">
+            <i class="fas fa-brain text-5xl text-transparent bg-clip-text bg-gradient-to-br from-purple-400 to-pink-400"></i>
+        </div>
+        <h1 class="title-font text-4xl sm:text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-red-300 mb-3">
+            Gemini App Inspirator
+        </h1>
+        <p class="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto">
+            Ignite your next project! Discover innovative application ideas powered by the Google Gemini API.
+        </p>
+    </header>
+
+    <main class="w-full max-w-6xl glassmorphism p-6 md:p-10 relative z-10">
+        <div class="text-center mb-8">
+            <p class="text-gray-200 mb-6 text-lg leading-relaxed max-w-2xl mx-auto">
+                Feeling stuck? Let Gemini be your muse! Based on your initial thoughts (like Language Translators or Prompt Enhancers),
+                we'll generate fresh, exciting project ideas tailored for the Gemini API. Click again for more, and we'll try to avoid repeats!
+            </p>
+            <button id="generateIdeasBtn" class="btn-shine bg-gradient-to-r from-purple-600 via-pink-500 to-red-500 hover:from-purple-700 hover:via-pink-600 hover:to-red-600 text-white font-bold py-4 px-10 rounded-xl text-xl shadow-xl hover:shadow-2xl transition duration-300 pulse-animation">
+                <i class="fas fa-lightbulb mr-3"></i> Spark My Creativity!
+            </button>
+        </div>
+
+        <div id="ideasContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mt-10">
+            <div id="placeholder-text" class="col-span-full text-center text-gray-400/80 text-xl py-16">
+                <i class="fas fa-magic text-5xl mb-6 text-purple-400/70"></i>
+                <p class="title-font text-2xl">Your Brilliant App Ideas Will Appear Here...</p>
+                <p class="text-sm mt-2">Click the button above to begin the inspiration journey!</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center mt-10 md:mt-16 text-gray-400 text-sm relative z-10">
+        <p>© 2024 Gemini App Inspirator. Let's build the future, one idea at a time.</p>
+        <p class="mt-1 text-xs">Powered by Your Ingenuity & Google Gemini API.</p>
+        <p class="mt-1 text-xs">API Key used for this demo (partially shown): <code class="bg-gray-700/50 px-1 rounded text-xs">AIzaSyD...lal74</code></p>
+        <p id="api-security-note" class="text-xs text-yellow-400 mt-2 hidden"><i class="fas fa-exclamation-triangle mr-1"></i><strong>Important:</strong> Exposing API keys client-side is insecure for production. This is for demonstration purposes only.</p>
+    </footer>
+
+    <script>
+        const apiKey = "AIzaSyDSF270Y1VJf1fe4G8ZAuw7bOITbAlal74"; // User-provided API Key
+        const modelName = "gemini-2.0-flash";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+        const generateIdeasBtn = document.getElementById('generateIdeasBtn');
+        const ideasContainer = document.getElementById('ideasContainer');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const errorModal = document.getElementById('error-modal');
+        const errorMessageElement = document.getElementById('error-message');
+        const placeholderText = document.getElementById('placeholder-text');
+
+        let generatedIdeaNames = new Set(); // To store names of ideas generated in the current session
+
+        generateIdeasBtn.addEventListener('click', fetchIdeas);
+
+        async function fetchIdeas() {
+            loadingOverlay.classList.remove('hidden');
+            loadingOverlay.style.opacity = '1';
+            if(placeholderText) placeholderText.classList.add('hidden');
+            ideasContainer.innerHTML = ''; 
+
+
+            const userInspirations = "Language Translator, Language Learning Assistant, Prompt Engineering Tool, Prompt Enhancer";
+            let basePrompt = `You are an expert AI application architect specializing in leveraging Google's Gemini API.
+I am seeking highly innovative and diverse application ideas that can be built using the Gemini API.
+I have already considered some foundational concepts such as: ${userInspirations}.
+
+Please provide 3 distinct and creative application ideas that go beyond these examples. For each idea, ensure you include:
+1.  **appName**: A catchy and descriptive name for the application.
+2.  **description**: A concise (1-2 sentences) explanation of the application's core functionality and value proposition.
+3.  **keyFeatures**: An array of 2-4 bullet points detailing specific features that prominently utilize the Gemini API's capabilities (e.g., multi-modal understanding, advanced reasoning, complex instruction following, creative text generation, function calling).
+4.  **targetUsers**: The primary audience or user group for this application.
+5.  **uniqueTwist**: A sentence describing what makes this idea particularly innovative or unique compared to standard applications.
+
+Format your entire response strictly as a single JSON array of objects. Each object must conform to the structure described above.
+Do not include any introductory/explanatory text, markdown formatting (like \`\`\`json or \`\`\`), or any characters outside of the JSON array itself. The output must be parsable by JSON.parse() directly.
+`;
+
+            let avoidanceInstructions = "";
+            if (generatedIdeaNames.size > 0) {
+                const namesToAvoid = Array.from(generatedIdeaNames).map(name => `"${name}"`).join(', ');
+                avoidanceInstructions = `\n\nIMPORTANT CONTEXT FOR THIS REQUEST: In this active session, the following application names/concepts have already been generated: ${namesToAvoid}. Please provide 3 distinctly NEW ideas and make a strong effort to avoid suggesting these specific titles or very similar core concepts again in your current response. Focus on novelty relative to what has already been shown.`;
+            }
+
+            const finalPrompt = basePrompt + avoidanceInstructions;
+            // console.log("Final prompt being sent:", finalPrompt); // For debugging
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: finalPrompt }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.9, 
+                            topK: 40,
+                            topP: 0.95,
+                            maxOutputTokens: 8192, 
+                            responseMimeType: "application/json", 
+                        },
+                        safetySettings: [ 
+                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
+                        ]
+                    })
+                });
+
+                if (!response.ok) {
+                    let errorData;
+                    try { errorData = await response.json(); } catch (e) { errorData = { error: { message: await response.text() || "Unknown error details" }}; }
+                    console.error('API Error Response:', errorData);
+                    const specificMessage = errorData.error?.message || `HTTP status ${response.status}`;
+                    throw new Error(`API request failed: ${specificMessage}`);
+                }
+
+                const data = await response.json();
+
+                if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
+                    let ideas;
+                    const part = data.candidates[0].content.parts[0];
+                    if (typeof part.text === 'string') { 
+                         try { ideas = JSON.parse(part.text); } catch (e) { console.error("Failed to parse text as JSON:", part.text, e); throw new Error("Received malformed JSON data from API."); }
+                    } else if (part.jsonObject && typeof part.jsonObject === 'object') { ideas = part.jsonObject; } 
+                    else if (Array.isArray(part)) { ideas = part; }
+                    else { console.error('Unexpected content part structure:', part, 'Full data:', data.candidates[0].content); throw new Error('API returned content in an unexpected format.'); }
+                    
+                    displayIdeas(ideas);
+
+                } else if (data.candidates && data.candidates[0] && data.candidates[0].finishReason === "SAFETY") {
+                    showError('Content generation was blocked due to safety settings. Try a different request.');
+                } else if (data.promptFeedback && data.promptFeedback.blockReason) {
+                    showError(`Your prompt was blocked. Reason: ${data.promptFeedback.blockReason}. Please revise your prompt.`);
+                } else {
+                    console.error('Unexpected API response structure:', data);
+                    throw new Error('Received an unexpected response structure from the API.');
+                }
+
+            } catch (error) {
+                console.error('Error fetching ideas:', error);
+                let userFriendlyMessage = `Failed to fetch ideas. ${error.message}.`;
+                if (error.message.includes("API key not valid")) { userFriendlyMessage += " Check your API key."; }
+                else if (error.message.includes("quota")) { userFriendlyMessage += " API quota might be exceeded."; }
+                else if (error.message.includes("model") && (error.message.includes("not found") || error.message.includes("does not exist"))) { userFriendlyMessage += ` Model '${modelName}' might be unavailable.`; }
+                else if (error.message.includes("Malformed JSON")) { userFriendlyMessage += " API returned invalid JSON data."; }
+                else { userFriendlyMessage += " Check network and console."; }
+                showError(userFriendlyMessage);
+            } finally {
+                loadingOverlay.style.opacity = '0';
+                setTimeout(() => loadingOverlay.classList.add('hidden'), 300); 
+                
+                if (ideasContainer.children.length === 0 && placeholderText) {
+                     placeholderText.classList.remove('hidden');
+                     placeholderText.querySelector('p.title-font').textContent = "No ideas loaded. Perhaps try again?";
+                     placeholderText.querySelector('p:last-child').textContent = "Sometimes even AI needs a second chance!";
+                }
+            }
+        }
+
+        async function copyIdeaToClipboard(idea, iconElement, buttonElement) {
+            const textToCopy = `
+App Name: ${idea.appName || 'N/A'}
+Description: ${idea.description || 'N/A'}
+
+Key Features:
+${(idea.keyFeatures || []).map(f => `  • ${f}`).join('\n')}
+
+Target Users: ${idea.targetUsers || 'N/A'}
+
+Unique Twist: ${idea.uniqueTwist || 'N/A'}
+            `.trim().replace(/^\s+/gm, '');
+
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+                const originalIconClass = iconElement.className; 
+                iconElement.className = 'fas fa-check text-green-400 text-sm';
+                buttonElement.title = 'Copied!';
+                setTimeout(() => { iconElement.className = originalIconClass; buttonElement.title = 'Copy Idea'; }, 2000);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                const originalIconClass = iconElement.className;
+                iconElement.className = 'fas fa-times text-red-400 text-sm';
+                buttonElement.title = 'Copy Failed!';
+                setTimeout(() => { iconElement.className = originalIconClass; buttonElement.title = 'Copy Idea'; }, 2000);
+            }
+        }
+
+        function displayIdeas(ideas) {
+            if (!ideas || !Array.isArray(ideas) || ideas.length === 0) {
+                if (placeholderText && ideasContainer.children.length === 0) { 
+                    placeholderText.classList.remove('hidden');
+                    placeholderText.querySelector('p.title-font').textContent = "Hmm, Gemini seems shy today.";
+                    placeholderText.querySelector('p:last-child').textContent = "No creative sparks found this time. Please try again!";
+                }
+                return;
+            }
+
+            if(placeholderText) placeholderText.classList.add('hidden');
+
+            ideas.forEach((idea, index) => {
+                if (idea.appName && typeof idea.appName === 'string') { 
+                    generatedIdeaNames.add(idea.appName.trim());
+                }
+
+                const ideaCard = document.createElement('div');
+                ideaCard.className = 'idea-card flex flex-col bg-opacity-20 bg-white p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out text-gray-200 border border-purple-400/30 min-h-[320px]';
+                ideaCard.style.animation = `fadeInUp 0.5s ${index * 0.1}s ease-out forwards`;
+                ideaCard.style.opacity = '0';
+
+                const featuresHtml = (idea.keyFeatures || []).map(feature =>
+                    `<li class="flex items-start mb-1.5 text-sm">
+                        <i class="fas fa-cogs text-purple-300 mr-2.5 mt-1 flex-shrink-0"></i>
+                        <span>${feature}</span>
+                    </li>`
+                ).join('');
+
+                ideaCard.innerHTML = `
+                    <button class="copy-button absolute top-3 right-3 p-2 rounded-full text-gray-400 hover:text-purple-300 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-purple-400/50 transition-all duration-200 z-10" title="Copy Idea">
+                        <i class="fas fa-copy text-sm"></i>
+                    </button>
+                    <div class="flex-grow pr-8">
+                        <div class="flex items-center mb-4">
+                            <span class="text-3xl mr-3">
+                                <i class="fas fa-rocket text-transparent bg-clip-text bg-gradient-to-br from-purple-400 to-pink-400"></i>
+                            </span>
+                            <h3 class="text-2xl font-semibold title-font text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-pink-200 to-red-200">${idea.appName || 'Untitled Idea'}</h3>
+                        </div>
+                        <p class="text-gray-300 mb-4 text-sm leading-relaxed">${idea.description || 'No description provided.'}</p>
+                        
+                        <div class="mb-4">
+                            <h4 class="font-semibold text-gray-100 mb-2 text-base"><i class="fas fa-magic mr-2 text-purple-300"></i>Gemini-Powered Features:</h4>
+                            <ul class="list-none pl-0 text-gray-300">
+                                ${featuresHtml}
+                            </ul>
+                        </div>
+                        
+                        ${idea.uniqueTwist ? `
+                        <div class="mb-4 p-3 bg-black/20 rounded-md border border-purple-500/30">
+                            <h5 class="font-semibold text-purple-300 text-sm mb-1">Unique Twist:</h5>
+                            <p class="text-xs text-gray-300">${idea.uniqueTwist}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="mt-auto pt-4 border-t border-gray-600/40">
+                        <p class="text-xs text-gray-400 flex items-center">
+                            <i class="fas fa-users mr-2 text-purple-400"></i> 
+                            <strong>Target Users:</strong>  <span class="truncate">${idea.targetUsers || 'General audience'}</span>
+                        </p>
+                    </div>
+                `;
+                ideasContainer.appendChild(ideaCard);
+
+                const copyButton = ideaCard.querySelector('.copy-button');
+                const iconElement = copyButton.querySelector('i');
+                copyButton.addEventListener('click', (event) => {
+                    event.stopPropagation(); 
+                    copyIdeaToClipboard(idea, iconElement, copyButton);
+                });
+            });
+        }
+        
+        const styleSheet = document.createElement("style");
+        styleSheet.type = "text/css";
+        styleSheet.innerText = `@keyframes fadeInUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }`;
+        document.head.appendChild(styleSheet);
+
+        function showError(message) {
+            errorMessageElement.innerHTML = message; 
+            errorModal.classList.remove('hidden');
+            errorModal.style.opacity = '1';
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => loadingOverlay.classList.add('hidden'), 300);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const securityNoteElement = document.getElementById('api-security-note');
+            if (securityNoteElement) {
+                securityNoteElement.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
